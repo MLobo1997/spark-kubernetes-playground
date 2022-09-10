@@ -30,31 +30,26 @@ sparkpi:
 		--conf spark.executor.instances=3 \
 		--conf spark.executor.memory=1g \
 		--conf spark.executor.cores=1 \
+		--conf spark.kubernetes.driver.volumes.persistentVolumeClaim.data-pvc.options.claimName=spark-data-pvc \
+		--conf spark.kubernetes.driver.volumes.persistentVolumeClaim.data-pvc.mount.path=/data-volume \
+		--conf spark.kubernetes.driver.volumes.persistentVolumeClaim.data-pvc.mount.path=/data-volume \
+		--conf spark.kubernetes.driver.volumes.persistentVolumeClaim.data-pvc.mount.readOnly=false \
+		--conf spark.kubernetes.executor.volumes.persistentVolumeClaim.data-pvc.options.claimName=spark-data-pvc \
+		--conf spark.kubernetes.executor.volumes.persistentVolumeClaim.data-pvc.mount.path=/data-volume \
+		--conf spark.kubernetes.executor.volumes.persistentVolumeClaim.data-pvc.mount.readOnly=false \
 		--conf spark.kubernetes.container.image=apache/spark:$(image_tag) \
 		--conf spark.kubernetes.container.image.pullPolicy=IfNotPresent \
 		--conf spark.kubernetes.namespace=$(namespace) \
 		--conf spark.kubernetes.authenticate.driver.serviceAccountName=$(service_account_name) \
+		--conf spark.eventLog.enabled=True \
+		--conf spark.eventLog.dir=file:///data-volume \
 		local:///opt/spark/examples/jars/spark-examples_2.12-3.3.0.jar 1000
-		#--conf spark.eventLog.enabled=True \
+#		${SPARK_HOME}/examples/jars/spark-examples_2.12-3.3.0.jar 10
+
+#		--conf spark.kubernetes.file.upload.path=file:///opt/spark/work-dir \
 
 # helm
-
-install-spark-helm-chart:
-	helm repo add bitnami https://charts.bitnami.com/bitnami
-	docker exec minikube docker pull docker.io/bitnami/spark:3.3.0-debian-11-r16
-	helm install -f values.yaml spark-playground bitnami/spark --version 6.3.1
 
 enable-spark-ui:
 	google-chrome http://localhost:9912/
 	kubectl port-forward svc/spark-playground-master-svc 9912:80
-
-sparkpi-spark-playground:
-	 spark-submit \
-		--class org.apache.spark.examples.SparkPi \
-		--conf spark.kubernetes.container.image=bitnami/spark:3.3.0-debian-11-r16 \
-		--master k8s://https://127.0.0.1:8001 \
-		--conf spark.kubernetes.driverEnv.SPARK_MASTER_URL=spark://spark-playground-master-svc:7077 \
-		--conf spark.kubernetes.file.upload.path=""\
-		--deploy-mode cluster \
-		/home/miguel.lobo/.sdkman/candidates/spark/3.3.0-local/examples/jars/spark-examples_2.12-3.3.0.jar 1000
-
