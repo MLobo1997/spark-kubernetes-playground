@@ -1,11 +1,14 @@
-namespace = default
+namespace = spark-playground
 service_account_name = spark
-image_tag = sparkpi
+image_tag = v3.3.0
 
 init:
 	minikube start --cpus 4 --memory 8192
-	#kubectl create namespace $(namespace)
-	#kubectl config set-context --current --namespace=$(namespace)
+	kubectl create namespace $(namespace)
+	kubectl config set-context --current --namespace=$(namespace)
+	#docker exec minikube docker pull apache/spark:v3.3.0
+	docker-image-tool.sh -m -r apache/spark -t v3.3.0 -f $SPARK_HOME/kubernetes/dockerfiles/spark/Dockerfile.java17 build
+	kubectl proxy
 
 create-service-account:
 	kubectl create serviceaccount spark
@@ -27,12 +30,12 @@ sparkpi:
 		--conf spark.executor.instances=3 \
 		--conf spark.executor.memory=1g \
 		--conf spark.executor.cores=1 \
-		--conf spark.kubernetes.container.image=spark:$(image_tag) \
-		--conf spark.kubernetes.container.image.pullPolicy=Never \
+		--conf spark.kubernetes.container.image=apache/spark:$(image_tag) \
+		--conf spark.kubernetes.container.image.pullPolicy=IfNotPresent \
 		--conf spark.kubernetes.namespace=$(namespace) \
 		--conf spark.kubernetes.authenticate.driver.serviceAccountName=$(service_account_name) \
-		--conf spark.eventLog.enabled=True \
-		local:///opt/spark/examples/jars/spark-examples_2.12-3.2.1.jar 1000
+		local:///opt/spark/examples/jars/spark-examples_2.12-3.3.0.jar 1000
+		#--conf spark.eventLog.enabled=True \
 
 # helm
 
