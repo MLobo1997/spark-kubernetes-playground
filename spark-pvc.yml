@@ -1,0 +1,30 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: spark-data-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: nfs
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spark-data-pod
+spec:
+  volumes:
+    - name: spark-data-pv
+      persistentVolumeClaim:
+        claimName: spark-data-pvc
+  containers:
+    - name: inspector
+      image: bitnami/minideb
+      command:
+        - sleep
+        - infinity
+      volumeMounts:
+        - mountPath: "/data"
+          name: spark-data-pv

@@ -1,0 +1,19 @@
+service:
+  type: NodePort # Because it's minikube, otherwise would be LoadBalancer
+image:
+  imagePullPolicy: IfNotPresent
+worker:
+  memoryLimit: 1gb
+  coreLimit: 1
+  replicaCount: 1
+  autoscaling:
+    enable: true
+    minReplicas: 1
+    maxReplicas: 3
+  extraVolumes:
+    - name: spark-data
+      persistentVolumeClaim:
+        claimName: spark-data-pvc
+  extraVolumeMounts:
+    - name: spark-data
+      mountPath: /data
