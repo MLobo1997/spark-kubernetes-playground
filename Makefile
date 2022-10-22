@@ -39,8 +39,9 @@ create-buckets:
 	awslocal s3api create-bucket --bucket $(logs_bucket)
 
 #TODO move in shell script the submit
+#TODO use spark-env to set variables in conf/spark-env.sh as explained in https://spark.apache.org/docs/latest/hadoop-provided.html
 sparkpi:
-	echo "Don't forget to do \`source .env\`"
+	echo "Don't forget to do \`source environment-vars\`"
 	spark-submit \
 		--master k8s://http://127.0.0.1:8001 \
 		--deploy-mode cluster \
@@ -58,34 +59,8 @@ sparkpi:
 		--conf spark.kubernetes.namespace=$(namespace) \
 		--conf spark.kubernetes.authenticate.driver.serviceAccountName=$(service_account_name) \
 		--conf spark.eventLog.enabled=True \
-		--conf spark.eventLog.dir=s3a://$(logs_bucket)/ \
+		--conf spark.eventLog.dir=s3a://$(logs_bucket)/. \
 		file://${SPARK_HOME}/examples/jars/spark-examples_2.12-$(spark_version).jar 10
-#		file://$(PWD)/target/spark-playground-1.0-SNAPSHOT-jar-with-dependencies.jar 10
-#        --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" \
-
-sparkpi-python:
-	spark-submit \
-		--master k8s://http://127.0.0.1:8001 \
-		--deploy-mode cluster \
-		--packages org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-s3:1.12.262,com.amazonaws:aws-java-sdk:1.12.262,com.amazonaws:aws-java-sdk-core:1.12.262 \
-        --conf spark.hadoop.fs.s3a.endpoint=http://$(minikube_internal_host):4566 \
-        --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
-        --conf spark.hadoop.fs.s3a.fast.upload=true \
-        --conf spark.hadoop.fs.s3a.access.key=foobar \
-        --conf spark.hadoop.fs.s3a.secret.key=foobar \
-        --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" \
-		--conf spark.executor.instances=3 \
-		--conf spark.executor.memory=1g \
-		--conf spark.executor.cores=1 \
-        --conf spark.kubernetes.file.upload.path=s3a://$(jars_bucket)/ \
-		--conf spark.kubernetes.container.image=$(docker_image) \
-		--conf spark.kubernetes.container.image.pullPolicy=Never \
-		--conf spark.kubernetes.namespace=$(namespace) \
-		--conf spark.kubernetes.authenticate.driver.serviceAccountName=$(service_account_name) \
-		--conf spark.eventLog.enabled=True \
-		--conf spark.eventLog.dir=s3a://$(logs_bucket)/test \
-		file://${SPARK_HOME}/examples/src/main/python/pi.py 10
-
 
 stop:
 	minikube delete
