@@ -1,10 +1,12 @@
 namespace = spark-playground
 service_account_name = spark
 spark_version=3.3.0
-image_repo_name = ourapache
-image_name = mlobo-spark
+image_repo_name = mlobo
+image_name = spark-base
 image_tag = v$(spark_version)
 docker_image = $(image_repo_name)/$(image_name):$(image_tag)
+history_image_name = spark-history-server
+history_server_docker_image = $(image_repo_name)/$(history_image_name):$(image_tag)
 localstack_compose_file = localstack-compose.yml
 jars_bucket = spark-jars
 logs_bucket = spark-logs
@@ -27,9 +29,12 @@ prepare_docker_build_context:
 	cp -r ${SPARK_HOME}/* tmp_docker_image/spark
 
 docker-image:
-	docker build -t $(docker_image) .
+	docker build -t $(docker_image) docker-images/base/
 	minikube image load $(docker_image)
-	#rm -r tmp_docker_image
+
+history-server-docker-image:
+	docker build -t $(history_server_docker_image) docker-images/history-server/
+	minikube image load $(history_server_docker_image)
 
 enable-localstack:
 	docker-compose -f $(localstack_compose_file) up
@@ -37,6 +42,11 @@ enable-localstack:
 create-buckets:
 	awslocal s3api create-bucket --bucket $(jars_bucket)
 	awslocal s3api create-bucket --bucket $(logs_bucket)
+
+start-history-server:
+	kubectl apply -f history-server.yaml
+	echo "In a few seconds, you'll be able to access the history server in the following url:"
+	minikube service spark-history-server-service -n $(namespace) --url
 
 #TODO move in shell script the submit
 #TODO use spark-env to set variables in conf/spark-env.sh as explained in https://spark.apache.org/docs/latest/hadoop-provided.html

@@ -63,16 +63,22 @@ ENV HADOOP_HOME="/opt/hadoop"
 ENV PATH="$SPARK_HOME/bin:$HADOOP_HOME/bin:$PATH"
 
 # Makes the `hadoop classpath` command also return aws classpaths
+# TODO Move to hadoop-env.sh
 ENV HADOOP_OPTIONAL_TOOLS="hadoop-aws"
 
 COPY ${SPARK_HADOOP_ROOT}/hadoop $HADOOP_HOME
 
+COPY custom-confs/* $SPARK_HOME/conf/
 
 WORKDIR /opt/spark/work-dir
 RUN chmod g+w /opt/spark/work-dir
 RUN chmod a+x /opt/decom.sh
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]
+
+#TODO remove once tars are used
+RUN mkdir $SPARK_HOME/logs && \
+    chown -R ${spark_uid}:root $SPARK_HOME/logs
 
 # Specify the User that the actual main process will run as
 USER ${spark_uid}
