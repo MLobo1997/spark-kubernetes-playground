@@ -1,6 +1,7 @@
 namespace = spark-playground
 service_account_name = spark
 spark_version=3.3.0
+hadoop_version=3.3.4
 image_repo_name = mlobo
 image_name = spark-base
 image_tag = v$(spark_version)
@@ -28,13 +29,12 @@ prepare_docker_build_context:
 	cp -r ${HADOOP_HOME}/* tmp_docker_image/hadoop
 	cp -r ${SPARK_HOME}/* tmp_docker_image/spark
 
-docker-image:
-	docker build -t $(docker_image) docker-images/base/
+create-docker-image:
+	wget -nc https://dlcdn.apache.org/spark/spark-$(spark_version)/spark-$(spark_version)-bin-without-hadoop.tgz -P docker-image/stage-0
+	wget -nc https://dlcdn.apache.org/hadoop/common/hadoop-$(hadoop_version)/hadoop-$(hadoop_version).tar.gz -P docker-image/stage-0
+	docker build --build-arg SPARK_VERSION=$(spark_version) --build-arg HADOOP_VERSION=$(hadoop_version) -t tmp/spark-image:stage-0 docker-image/stage-0
+	docker build -t $(docker_image) docker-image/stage-1
 	minikube image load $(docker_image)
-
-history-server-docker-image:
-	docker build -t $(history_server_docker_image) docker-images/history-server/
-	minikube image load $(history_server_docker_image)
 
 enable-localstack:
 	docker-compose -f $(localstack_compose_file) up
@@ -78,3 +78,5 @@ stop:
 
 # TODO: document that you did this: https://spark.apache.org/docs/latest/hadoop-provided.html
 #Also need to do: `export SPARK_DIST_CLASSPATH=$SPARK_DIST_CLASSPATH:$HADOOP_HOME/share/hadoop/tools/lib/*`
+
+#TODO enable the ZGarbageCollector
