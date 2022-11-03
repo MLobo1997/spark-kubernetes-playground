@@ -1,2 +1,0 @@
-export HADOOP_OPTIONAL_TOOLS="hadoop-aws"
-export SPARK_DIST_CLASSPATH=$(hadoop classpath)

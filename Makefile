@@ -49,9 +49,8 @@ start-history-server:
 	minikube service spark-history-server-service -n $(namespace) --url
 
 #TODO move in shell script the submit
-#TODO use spark-env to set variables in conf/spark-env.sh as explained in https://spark.apache.org/docs/latest/hadoop-provided.html
 sparkpi:
-	echo "Don't forget to do \`source environment-vars\`"
+	echo "Don't forget to copy hadoop-env.sh and spark-env.sh to your local setup"
 	spark-submit \
 		--master k8s://http://127.0.0.1:8001 \
 		--deploy-mode cluster \

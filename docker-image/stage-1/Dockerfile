@@ -16,19 +16,19 @@ RUN set -ex && \
 
 ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64/"
 # Makes the `hadoop classpath` command also return aws classpaths
-# TODO Move to hadoop-env.sh
-ENV HADOOP_OPTIONAL_TOOLS="hadoop-aws"
 ENV HADOOP_HOME="/opt/hadoop"
 ENV SPARK_HOME="/opt/spark"
 ENV PATH="$SPARK_HOME/bin:$HADOOP_HOME/bin:$PATH"
 
-COPY custom-confs/* /opt/spark/conf/
+COPY spark-confs/* /opt/spark/conf/
+COPY hadoop-confs/* /opt/hadoop/etc/hadoop/
 COPY --from=build /opt/decom.sh /opt/decom.sh
 COPY --from=build /opt/entrypoint.sh /opt/entrypoint.sh
 
 WORKDIR /opt/spark/work-dir
 RUN chmod g+w /opt/spark/work-dir
 RUN chmod a+x /opt/decom.sh
+RUN chmod a+x /opt/hadoop/etc/hadoop/hadoop-env.sh
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]
 
